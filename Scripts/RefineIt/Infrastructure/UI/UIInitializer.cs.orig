@@ -1,0 +1,259 @@
+<<<<<<< HEAD
+﻿using System;
+using MVVMLibrary.Infrastructure;
+using RefineIt._Project.Scripts.RefineIt.Runtime.MVVM.ViewModels;
+using RefineIt._Project.Scripts.RefineIt.Runtime.MVVM.Views;
+=======
+﻿using Gameplay.MVVM.ViewModels;
+using Gameplay.MVVM.Views;
+using MVVMLibrary.Infrastructure;
+>>>>>>> 00408114 ([RFIT-119] wip)
+using UnityEngine;
+using Utils.Services;
+using Zenject;
+
+<<<<<<< HEAD
+namespace RefineIt.Infrastructure.UI
+=======
+namespace Infrastructure.UI
+>>>>>>> 00408114 ([RFIT-119] wip)
+{
+    public class UIInitializer : MonoBehaviour
+    {
+        private ViewsController _viewsController;
+        private IDispatcherService _dispatcherService;
+
+
+        [Inject]
+        private void Construct(ViewsController viewsController, IDispatcherService dispatcherService)
+        {
+            _dispatcherService = dispatcherService;
+            _viewsController = viewsController;
+        }
+
+        private void Awake()
+        {
+            DontDestroyOnLoad(this);
+        }
+
+        private void Start()
+        {
+            _viewsController.ShowView<HeaderView, HeaderViewModel>();
+<<<<<<< HEAD
+=======
+            _viewsController.ShowView<GameplayView, GameplayViewModel>();
+>>>>>>> 00408114 ([RFIT-119] wip)
+        }
+        /*
+
+        public void Activate()
+        {
+            _gameStateModel = _modelsRepository.GetSessionModel<GameStateModel>();
+            _firstCharacterPurchaseModel = _modelsRepository.GetUIModel<FirstCharacterPurchaseModel>();
+            _tutorialModel = _modelsRepository.GetSessionModel<TutorialModel>();
+            _footerModel = _modelsRepository.GetUIModel<FooterModel>();
+            _seasonPassUIModel = _modelsRepository.GetUIModel<SeasonPassUIModel>();
+            _dailyEntranceRewardModel = _modelsRepository.GetUIModel<DailyEntranceRewardModel>();
+            _connectionStatusModel = _modelsRepository.GetSessionModel<ConnectionStatusModel>();
+
+            //TODO : Set footer data from proper place
+            _footerModel.SetTabsData(_footerData);
+
+            //TODO: Подумать над рефаком этих 2х строк (настроить сортинг окон)
+            _viewsController.ShowView(EViewType.OverlayText);
+            _viewsController.CloseView(EViewType.OverlayText);
+
+            OnGameStateChanged(_gameStateModel);
+
+            _gameStateModel.StateChanged += OnGameStateChanged;
+            _tutorialModel.IsActiveTutorial.Changed += OnTutorialModeActivityChanged;
+            _playerEventMessenger.PlayerRebirthActivated += OnPlayerRebirth;
+
+            _gameStateModel.SetState(EGameState.MainMenu);
+        }
+
+        private void OnDestroy()
+        {
+            _gameStateModel.StateChanged -= OnGameStateChanged;
+            _tutorialModel.IsActiveTutorial.Changed -= OnTutorialModeActivityChanged;
+
+            _playerEventMessenger.PlayerRebirthActivated -= OnPlayerRebirth;
+        }
+
+        private void OnTutorialModeActivityChanged(bool isActive)
+        {
+            _dispatcherService.InvokeOnMainThread(() =>
+            {
+                if (isActive)
+                {
+                    ShowTutorialUI();
+                }
+                else
+                {
+                    ShowGameStateUI();
+                }
+            });
+        }
+
+        //TODO: remove from this class
+        private void OnPlayerRebirth(PowerUpType type)
+        {
+            _gameStateModel.SetState(EGameState.Run);
+        }
+
+        private void OnGameStateChanged(GameStateModel model)
+        {
+            _dispatcherService.InvokeOnMainThread(() =>
+            {
+                if (_tutorialModel.IsActiveTutorial.Value)
+                {
+                    ShowTutorialUI();
+                }
+                else
+                {
+                    ShowGameStateUI();
+                }
+            });
+        }
+
+        private void ShowTutorialUI()
+        {
+            switch (_gameStateModel.CurrentState)
+            {
+                case EGameState.MainMenu:
+                    ShowTutorialMainMenu();
+                    break;
+                case EGameState.Run:
+                    ShowTutorialRunViews();
+                    break;
+                default:
+                    ShowGameStateUI();
+                    break;
+            }
+        }
+
+        [Button("UpdateViews")]
+        private void UpdateViews()
+        {
+            ShowGameStateUI();
+            this.Log($"views for state {_gameStateModel.CurrentState}");
+        }
+
+        private void ShowGameStateUI()
+        {
+            // NOTE: add LoadingScreen state.
+            //LoadingScreen -> Loading - permit -> empty
+            //any state(besides LoadingScreen) -> Loading - permit -> CloseAllViews
+            switch (_gameStateModel.CurrentState)
+            {
+                case EGameState.Loading:
+                    //because got a black screen between the end of the loading screen and the main menu
+                    //_viewsController.CloseAllViews();
+                    break;
+                case EGameState.MainMenu:
+                    ShowMainMenuViews();
+                    break;
+                case EGameState.Intro:
+                    _viewsController.CloseAllViews(false);
+                    break;
+                case EGameState.FirstCharacterPurchase:
+                    ShowFirstCharacterBuy();
+                    break;
+                case EGameState.Run:
+                    ShowRunViews();
+                    break;
+                case EGameState.BuyBoosterInRun:
+                    break;
+                case EGameState.Pause:
+                    ShowPauseViews();
+                    break;
+                case EGameState.Death:
+                    _viewsController.CloseAllViews(false);
+                    break;
+                case EGameState.Countdown:
+                    _viewsController.CloseAllViews(false);
+                    _viewsController.ShowView(EViewType.Score, false);
+                    break;
+                case EGameState.Result:
+                    _viewsController.CloseAllViews(false);
+                    _viewsController.ShowView(EViewType.Highscore);
+                    break;
+                case EGameState.Restart:
+                    _viewsController.CloseAllViews(false);
+                    break;
+                default:
+                    return;
+            }
+        }
+
+        private void ShowFirstCharacterBuy()
+        {
+            _firstCharacterPurchaseModel.StartPurchaseSequence();
+
+            _viewsController.CloseAllViews(false);
+            _viewsController.CloseView(EViewType.CharacterSelection, false);
+        }
+
+        private void ShowPauseViews()
+        {
+            _viewsController.CloseAllViews(false);
+            _viewsController.ShowView(EViewType.Header, false);
+            _viewsController.ShowView(EViewType.Pause, false);
+            _viewsController.ShowView(EViewType.DailyQuestForPause, false);
+        }
+
+        private void ShowMainMenuViews()
+        {
+            _viewsController.CloseAllViews(false);
+
+            _viewsController.ShowView(EViewType.MainScreen, false);
+
+            if (_gameStateModel.IsLocalMode)
+            {
+                _viewsController.ShowView(EViewType.OfflineRun, false);
+
+                return;
+            }
+
+            if (!_dailyEntranceRewardModel.IsShowedView && _dailyEntranceRewardModel.Reward != null)
+            {
+                _viewsController.ShowView(EViewType.DailyEntranceReward, false);
+                _dailyEntranceRewardModel.SetShowedFlag();
+            }
+
+            _viewsController.ShowView(EViewType.Footer, false);
+            _viewsController.ShowView(EViewType.Header, false);
+            _viewsController.ShowView(EViewType.Shop, false);
+            _viewsController.ShowView(EViewType.CharacterSelection, false);
+            _viewsController.ShowView(EViewType.Run, false);
+            _viewsController.ShowView(EViewType.LeaderboardScreen, false);
+            _viewsController.ShowView(EViewType.Leaderboard, false);
+            // _viewsController.ShowView(EViewType.MetaMask);
+
+            _seasonPassUIModel.CheckShowSeasonPopup();
+        }
+
+        private void ShowRunViews()
+        {
+            _viewsController.CloseAllViews(false);
+            _viewsController.ShowView(EViewType.GameplayScreen, false);
+            _viewsController.ShowView(EViewType.CompetitiveSpirit, false);
+            _viewsController.ShowView(EViewType.Running, false);
+            _viewsController.ShowView(EViewType.Letters, false);
+        }
+
+        private void ShowTutorialMainMenu()
+        {
+            _viewsController.CloseAllViews(false);
+            _viewsController.ShowView(EViewType.MainScreen, false);
+            _viewsController.ShowView(EViewType.Run, false);
+        }
+
+        private void ShowTutorialRunViews()
+        {
+            _viewsController.CloseAllViews(false);
+            _viewsController.ShowView(EViewType.Tutorial, false);
+        }
+        */
+    }
+}
